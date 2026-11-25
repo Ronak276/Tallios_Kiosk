@@ -21,27 +21,26 @@ export function CartSidebar({ lines, onQuantityChange, onCheckout, customizer, p
         {hasItems && <span className="ml-auto rounded-full bg-tint px-2.5 py-1 text-xs text-primary">{itemCount} {itemCount === 1 ? 'item' : 'items'}</span>}
       </h2>
       <div className="shrink-0" inert={paymentBusy}>
-        {customizer || (hasItems ? (
+        {customizer}
+        {hasItems ? (
           <ul className="mt-2 divide-y divide-line">
             {lines.map((line) => (
               <CartItem key={line.key} line={line} onQuantityChange={onQuantityChange} />
             ))}
           </ul>
-        ) : (
+        ) : !customizer && (
           <p className="mt-4 border-t border-line pt-5 text-sm text-muted">
             Add an item from the menu to start your order.
           </p>
-        ))}
+        )}
       </div>
-      {!customizer && (
-        <>
-          <div className="mt-4 flex shrink-0 justify-between rounded-xl bg-wash px-3 py-3 font-bold">
-            <span>Subtotal</span>
-            <span>{formatMoney(subtotal)}</span>
-          </div>
-          <CartCheckout key={hasItems ? "active" : "empty"} subtotal={subtotal} onCheckout={onCheckout} busy={paymentBusy} />
-        </>
+      {(hasItems || !customizer) && (
+        <div className="mt-4 flex shrink-0 justify-between rounded-xl bg-wash px-3 py-3 font-bold">
+          <span>Subtotal</span>
+          <span>{formatMoney(subtotal)}</span>
+        </div>
       )}
+      {!customizer && <CartCheckout key={hasItems ? 'active' : 'empty'} subtotal={subtotal} onCheckout={onCheckout} busy={paymentBusy} />}
       {paymentStatus && <p role="status" className="mt-2 text-sm text-muted">{paymentStatus}</p>}
     </aside>
   )
