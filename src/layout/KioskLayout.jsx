@@ -8,7 +8,7 @@ export function KioskLayout({ children }) {
 
 export function KioskHeader({ mode, onStartOver }) {
   return (
-    <header className="mb-3 flex flex-wrap items-center justify-between gap-3">
+    <header className="sticky top-0 z-30 -mx-4 mb-3 flex flex-wrap items-center justify-between gap-3 border-b border-line bg-white px-4 py-3 sm:-mx-6 sm:px-6 md:mx-0 md:px-0">
       <Button variant="outline" className="bg-wash text-primary" onClick={onStartOver}>
         <FiArrowLeft /> Start over
       </Button>
