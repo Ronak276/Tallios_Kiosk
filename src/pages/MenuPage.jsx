@@ -15,6 +15,7 @@ import {
   addCartLine,
   calculateItemCount,
   calculateSubtotal,
+  createCartLine,
   createOrder,
   getMenuByCategory,
   formatMoney,
@@ -38,24 +39,29 @@ export function MenuPage({ mode, menuHeadingRef, onReset, stripeReturn }) {
   const [announcement, setAnnouncement] = useState('')
   const modalTrigger = useRef(null)
   const stripeOpening = useRef(false)
-  const [paymentStatus, setPaymentStatus] = useState(stripeReturn && !stripeReturn.canceled && !stripeReturn.qr ? 'Verifying Stripe test payment…' : '')
+  const [paymentBusy, setPaymentBusy] = useState(Boolean(stripeReturn && !stripeReturn.qr))
+  const [paymentStatus, setPaymentStatus] = useState(stripeReturn && !stripeReturn.qr ? 'Checking Stripe checkout…' : '')
 
   useEffect(() => {
     if (!stripeReturn || stripeReturn.qr) return
-    if (stripeReturn.canceled) {
-      clearStripeReturn()
-      setPaymentStatus('Stripe checkout was canceled. Your cart is ready.')
-      return
-    }
     let active = true
-    verifyStripeReturn(stripeReturn).then((result) => {
+    const checkSession = stripeReturn.canceled ? cancelStripeCheckout : verifyStripeReturn
+    checkSession(stripeReturn).then((result) => {
       if (!active) return
+      if (stripeReturn.canceled && result.expired) {
+        clearStripeReturn()
+        setPaymentStatus('Stripe checkout was canceled. Your cart is ready.')
+        setPaymentBusy(false)
+        return
+      }
       const paidOrder = stripeReturn.order
       if (!result.paid || result.amount !== calculateSubtotal(paidOrder.lines) || result.orderId !== paidOrder.id) {
         throw new Error('Stripe has not confirmed this test payment.')
       }
       setOrder({ ...paidOrder, createdAt: new Date(paidOrder.createdAt), stripePaid: true })
+      setLines([])
       setPaymentStatus('')
+      setPaymentBusy(false)
       clearStripeReturn()
     }).catch(() => {
       if (active) setPaymentStatus('Could not verify Stripe test payment. Refresh this page to retry.')
@@ -157,11 +163,20 @@ export function MenuPage({ mode, menuHeadingRef, onReset, stripeReturn }) {
     setSelectedItem(entry)
   }
 
-  function handleAddItem(line) {
+  function addItem(line) {
     setLines((current) => addCartLine(current, line))
     setAnnouncement(line.quantity + ' × ' + line.name + ' added to your order.')
+  }
+
+  function handleAddItem(line) {
+    addItem(line)
     setSelectedItem(null)
     restoreFocus()
+  }
+
+  function handleQuickAdd(item) {
+    addItem(createCartLine(item))
+    setSelectedItem(null)
   }
 
   function handleQuantityChange(key, value) {
@@ -175,6 +190,7 @@ export function MenuPage({ mode, menuHeadingRef, onReset, stripeReturn }) {
     if (stripeEnabled) {
       if (stripeOpening.current || paymentQr) return
       stripeOpening.current = true
+      setPaymentBusy(true)
       setPaymentStatus('Opening Stripe test checkout…')
       try {
         const pending = await openStripeCheckout({ ...nextOrder, id: nextOrder.id.replace('DEMO-', 'TEST-') }, qr)
@@ -183,10 +199,12 @@ export function MenuPage({ mode, menuHeadingRef, onReset, stripeReturn }) {
           setPaymentQr(pending)
           setPaymentStatus('')
           stripeOpening.current = false
+          setPaymentBusy(false)
         }
       } catch (error) {
         setPaymentStatus(error.message || 'Could not open Stripe Checkout.')
         stripeOpening.current = false
+        setPaymentBusy(false)
       }
       return
     }
@@ -201,7 +219,7 @@ export function MenuPage({ mode, menuHeadingRef, onReset, stripeReturn }) {
   return (
     <KioskLayout>
       <div className="grid items-start gap-4 lg:gap-6 md:grid-cols-[minmax(0,1fr)_minmax(16rem,27%)]">
-        <section aria-labelledby="menu-title" className="min-w-0">
+        <section aria-labelledby="menu-title" className="min-w-0" inert={paymentBusy}>
           <KioskHeader mode={mode} onStartOver={handleStartOver} />
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h1
@@ -221,13 +239,14 @@ export function MenuPage({ mode, menuHeadingRef, onReset, stripeReturn }) {
           <p className="mt-2 text-sm text-muted">Surinamese flavors, roasted in San Francisco.</p>
           <div className="mt-5 grid items-start rounded-2xl border border-line bg-white lg:grid-cols-[7rem_minmax(0,1fr)]">
             <CategoryNav activeCategory={category} onSelect={setCategory} />
-            <MenuGrid category={category} items={visibleItems} onSelectItem={handleSelectItem} />
+            <MenuGrid category={category} items={visibleItems} onSelectItem={handleSelectItem} onQuickAdd={handleQuickAdd} />
           </div>
         </section>
 
         <CartSidebar
           lines={lines}
           paymentStatus={paymentStatus}
+          paymentBusy={paymentBusy}
           onQuantityChange={handleQuantityChange}
           onCheckout={handleCheckout}
           customizer={selectedItem && (

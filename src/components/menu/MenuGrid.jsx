@@ -3,7 +3,7 @@ import { MenuItemCard } from './MenuItemCard'
 /**
  * Grid displaying filtered menu items with category heading and count.
  */
-export function MenuGrid({ category, items, onSelectItem }) {
+export function MenuGrid({ category, items, onSelectItem, onQuickAdd }) {
   return (
     <div className="min-w-0 p-3 sm:p-4">
       <div className="mb-3 flex items-center justify-between gap-2">
@@ -14,7 +14,7 @@ export function MenuGrid({ category, items, onSelectItem }) {
       </div>
       <div className="grid grid-cols-1 gap-3 min-[450px]:grid-cols-2 xl:grid-cols-3">
         {items.map((entry) => (
-          <MenuItemCard key={entry.id} item={entry} onSelect={onSelectItem} />
+          <MenuItemCard key={entry.id} item={entry} onSelect={onSelectItem} onQuickAdd={onQuickAdd} />
         ))}
       </div>
     </div>

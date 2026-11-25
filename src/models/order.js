@@ -1,9 +1,25 @@
 import { FiCoffee, FiShoppingBag } from 'react-icons/fi'
+import { MILKS, SIZES, isDrinkItem } from './menu'
 
 export const ORDER_TYPES = [
   { label: 'Dine in', detail: 'Enjoy your order here', Icon: FiCoffee },
   { label: 'Take away', detail: 'We’ll pack it to go', Icon: FiShoppingBag },
 ]
+
+export function createCartLine(item, {
+  size = isDrinkItem(item) ? SIZES[0] : null,
+  milk = item.milk ? MILKS[0] : null,
+  quantity = 1,
+} = {}) {
+  const options = [size?.label, milk?.label].filter(Boolean).join(' · ')
+  return {
+    key: [item.id, options].join('|'),
+    name: item.name,
+    options,
+    quantity,
+    price: item.price + (size?.price ?? 0) + (milk?.price ?? 0),
+  }
+}
 
 /**
  * Generate a demo order identifier.

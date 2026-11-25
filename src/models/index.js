@@ -5,6 +5,7 @@ export {
   addCartLine,
   calculateItemCount,
   calculateSubtotal,
+  createCartLine,
   createOrder,
   createOrderId,
   updateCartLineQuantity,

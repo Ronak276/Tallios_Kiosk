@@ -22,7 +22,7 @@ export function PaymentCode({ message, label, caption }) {
   )
 }
 
-export function CartCheckout({ subtotal, onCheckout }) {
+export function CartCheckout({ subtotal, onCheckout, busy }) {
   const [expanded, setExpanded] = useState(false)
   const [name, setName] = useState('')
   const [showQr, setShowQr] = useState(false)
@@ -30,13 +30,14 @@ export function CartCheckout({ subtotal, onCheckout }) {
   return (
     <>
       <Button
+        variant={expanded ? 'outline' : 'default'}
         className="mt-3 min-h-13 w-full shrink-0"
-        disabled={!subtotal}
+        disabled={!subtotal || busy}
         aria-expanded={expanded}
         aria-controls={expanded ? 'cart-checkout' : undefined}
         onClick={() => setExpanded((open) => !open)}
       >
-        Checkout
+        {expanded ? 'Back to cart' : 'Checkout'}
       </Button>
       {expanded && (
         <form id="cart-checkout" className="mt-3 border-t border-line pt-3" onSubmit={(event) => {
@@ -55,8 +56,8 @@ export function CartCheckout({ subtotal, onCheckout }) {
             className="mt-1.5 min-h-11 w-full rounded-lg border border-line bg-white px-3 text-base"
           />
           <div className="mt-3 grid grid-cols-2 gap-2">
-            <Button type="submit">Pay</Button>
-            <Button variant="outline" className="bg-wash px-2 text-sm leading-tight" aria-expanded={stripeEnabled ? undefined : showQr} onClick={(event) => {
+            <Button type="submit" disabled={busy}>Pay</Button>
+            <Button variant="outline" className="bg-wash px-2 text-sm leading-tight" disabled={busy} aria-expanded={stripeEnabled ? undefined : showQr} onClick={(event) => {
               if (stripeEnabled) onCheckout(event.currentTarget, name.trim(), true)
               else setShowQr((visible) => !visible)
             }}>

@@ -13,7 +13,7 @@ export async function openStripeCheckout(order, qr = false) {
   const { id, url } = await checkoutRequest('', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ orderId: order.id, lines: order.lines.map(({ key, quantity }) => ({ key, quantity })) }),
+    body: JSON.stringify({ orderId: order.id, mode: order.mode, lines: order.lines.map(({ key, quantity }) => ({ key, quantity })) }),
   })
   if (new URL(url).origin !== 'https://checkout.stripe.com') throw new Error('Invalid Stripe Checkout URL.')
   const pending = { id, order, url, qr }
