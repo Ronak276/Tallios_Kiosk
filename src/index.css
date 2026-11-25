@@ -1,0 +1,23 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ink: #102745;
+  --color-primary: #24558d;
+  --color-muted: #4d6179;
+  --color-line: #d6e2f0;
+  --color-wash: #f4f7fb;
+  --color-tint: #e8f0fb;
+}
+
+:root {
+  font-family: Inter, system-ui, sans-serif;
+  color: var(--color-ink);
+  background: var(--color-wash);
+}
+
+button:not(:disabled) { cursor: pointer; }
+
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 3px;
+}
